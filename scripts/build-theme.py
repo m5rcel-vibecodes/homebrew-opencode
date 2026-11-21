@@ -1,4 +1,4 @@
-"""Build the Homebrew Channel themes for T3 Code.
+"""Build the Homebrew Channel themes for T3 Code and OpenCode Desktop.
 
 What it does
     Each entry in THEMES becomes one file, themes/<id>.json, in the format
@@ -35,6 +35,19 @@ Rules that keep the themes working
     - Changing a theme id renames its file. Users who installed the old id
       keep a stale copy, so mention any rename in the release notes.
 
+OpenCode
+    The same THEMES also become src/opencode/generated/themes.json, which
+    the OpenCode plugin (src/opencode/gui.ts) bundles. Each entry holds:
+      - "theme": an OpenCode theme (https://opencode.ai/desktop-theme.json),
+        a palette and token overrides mapped from the T3 Code colors by
+        opencode_variant(),
+      - "css": the background, the bubbles, src/opencode/hbc-opencode.css
+        and the theme's own "css", minified. The plugin injects it only
+        while that theme is active.
+    OpenCode themes must have a light variant. These themes are dark only,
+    so "light" is a copy of "dark". Then run `vite build` (or `npm run build`,
+    which runs this script first) to write dist/gui-experimental.cjs.
+
 To add a color variation, see docs/DEVELOPMENT.md.
 """
 
@@ -51,6 +64,8 @@ OUTPUT_DIR = ROOT / "themes"
 CSS_FILES = [ROOT / "src" / "hbc-bubbles-fast.css", ROOT / "src" / "hbc-theme.css"]
 BACKGROUNDS = ROOT / "assets" / "generated"
 CSS_MAX_LENGTH = 50_000
+OPENCODE_CSS = ROOT / "src" / "opencode" / "hbc-opencode.css"
+OPENCODE_OUTPUT = ROOT / "src" / "opencode" / "generated" / "themes.json"
 
 # The base dark palette. Every color variation is tinted from it with tint().
 DARK = json.loads((OUTPUT_DIR / "homebrew-channel-colors.json").read_text("utf-8"))["colors"]
@@ -301,17 +316,22 @@ def tinted_bubbles(css: str, theme: str) -> str:
     return css
 
 
-def build(spec: dict) -> dict:
+def theme_css(spec: dict, layout: Path, own_css: str) -> str:
+    """The background, the bubbles, the layout CSS and the theme's own CSS, minified."""
     parts = []
     if spec["background"]:
         parts.append(background_css(spec["background"]))
-    bubbles, theme_css = (path.read_text("utf-8").strip() for path in CSS_FILES)
+    bubbles = CSS_FILES[0].read_text("utf-8").strip()
     if spec.get("bubbles"):
         bubbles = tinted_bubbles(bubbles, spec["bubbles"])
-    parts += [bubbles, theme_css]
-    if spec.get("css"):
-        parts.append(spec["css"])
-    css = minify("\n".join(parts))
+    parts += [bubbles, layout.read_text("utf-8").strip()]
+    if own_css:
+        parts.append(own_css)
+    return minify("\n".join(parts))
+
+
+def build(spec: dict) -> dict:
+    css = theme_css(spec, CSS_FILES[1], spec.get("css"))
     if len(css) > CSS_MAX_LENGTH:
         raise SystemExit(f"{spec['id']}: CSS is {len(css)} characters; T3 Code allows {CSS_MAX_LENGTH}.")
 
@@ -329,13 +349,113 @@ def build(spec: dict) -> dict:
     return theme
 
 
+# ---------- OpenCode ----------
+
+# OpenCode's palette has a success role, which the T3 Code colors lack. Like
+# error and warning, it keeps its meaning in every color variation.
+OPENCODE_SUCCESS = "#3fcf6a"
+
+
+def mix(a: str, b: str, amount: float) -> str:
+    """Blend two hex colors: amount 0 is a, 1 is b."""
+    rgb = [round(int(a[i:i + 2], 16) * (1 - amount) + int(b[i:i + 2], 16) * amount) for i in (1, 3, 5)]
+    return "#" + "".join(f"{c:02x}" for c in rgb)
+
+
+def opencode_variant(c: dict) -> dict:
+    """Map a T3 Code palette onto an OpenCode theme variant.
+
+    The palette seeds OpenCode's generated scales; the overrides pin the
+    tokens the main screens use to the exact HBC colors, as the app's own
+    themes do. Token names come from OpenCode's theme resolver.
+    """
+    return {
+        "palette": {
+            "neutral": c["canvas"],
+            "ink": c["text"],
+            "primary": c["accent"],
+            "success": OPENCODE_SUCCESS,
+            "warning": c["warning"],
+            "error": c["error"],
+            "info": c["updateForeground"],
+            "interactive": c["accent"],
+        },
+        "overrides": {
+            "background-base": c["canvas"],
+            "background-stronger": c["chrome"],
+            "text-strong": c["text"],
+            "text-base": mix(c["text"], c["textMuted"], 0.4),
+            "text-weak": c["textMuted"],
+            "text-weaker": mix(c["placeholder"], c["canvas"], 0.35),
+            "text-interactive-base": c["accent"],
+            "border-base": c["toolbarBorder"],
+            "border-weak-base": c["border"],
+            "border-weaker-base": c["sidebarBorder"],
+            "icon-base": c["iconMuted"],
+            "icon-weak-base": c["terminalScrollbarHover"],
+            "surface-base": c["surface"],
+            "surface-base-hover": "#ffffff0d",
+            "surface-raised-base": c["surfaceRaised"],
+            "surface-raised-base-hover": c["toolbarControlHover"],
+            "surface-raised-stronger-non-alpha": c["surfaceOverlay"],
+            "surface-interactive-weak": c["accentSurface"],
+            "surface-critical-base": c["errorSurface"],
+            "surface-warning-base": c["warningSurface"],
+            "markdown-link": c["accent"],
+            "markdown-link-text": c["updateForeground"],
+        },
+        "v2Overrides": {
+            "v2-background-bg-base": c["canvas"],
+            "v2-background-bg-deep": c["sidebar"],
+            "v2-background-bg-layer-01": c["surface"],
+            "v2-background-bg-layer-02": c["surfaceRaised"],
+            "v2-background-bg-layer-03": c["toolbarControlHover"],
+            "v2-background-bg-layer-04": c["terminalScrollbar"],
+            "v2-text-text-accent": c["accent"],
+            "v2-icon-icon-accent": c["accent"],
+            "v2-border-border-focus": c["accent"],
+        },
+    }
+
+
+def build_opencode(spec: dict) -> dict:
+    variant = opencode_variant(spec["dark"])
+    # The T3 Code CSS sets the glass and the no-background backdrop on .dark,
+    # a class OpenCode does not use. Its CSS only loads in dark themes, so
+    # :root does the same job.
+    own_css = (spec.get("css") or "").replace(".dark {", ":root {")
+    return {
+        "theme": {
+            "$schema": "https://opencode.ai/desktop-theme.json",
+            "name": spec["name"],
+            "id": spec["id"],
+            "light": variant,
+            "dark": variant,
+        },
+        "css": theme_css(spec, OPENCODE_CSS, own_css),
+    }
+
+
+def write_json(path: Path, value) -> None:
+    # open() rather than Path.write_text(newline=...), which needs Python 3.10.
+    with open(path, "w", encoding="utf-8", newline="\n") as file:
+        file.write(json.dumps(value, indent=2) + "\n")
+
+
 def main() -> None:
     OUTPUT_DIR.mkdir(exist_ok=True)
     for spec in THEMES:
         theme = build(spec)
         output = OUTPUT_DIR / f"{spec['id']}.json"
-        output.write_text(json.dumps(theme, indent=2) + "\n", "utf-8", newline="\n")
+        write_json(output, theme)
         print(f"Wrote themes/{output.name}: {len(theme['css'])} characters of CSS.")
+
+    opencode = [build_opencode(spec) for spec in THEMES]
+    OPENCODE_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    write_json(OPENCODE_OUTPUT, opencode)
+    total = sum(len(entry["css"]) for entry in opencode)
+    print(f"Wrote {OPENCODE_OUTPUT.relative_to(ROOT)}: {len(opencode)} OpenCode themes, "
+          f"{total} characters of CSS.")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
-# Homebrew Channel theme for T3 Code
+# Homebrew Channel theme for OpenCode and T3 Code
 
 [![Latest release](https://img.shields.io/github/v/release/FrankieFms/homebrew-t3code?label=release)](https://github.com/FrankieFms/homebrew-t3code/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/FrankieFms/homebrew-t3code/total?label=downloads)](https://github.com/FrankieFms/homebrew-t3code/releases)
 [![Stars](https://img.shields.io/github/stars/FrankieFms/homebrew-t3code?style=flat)](https://github.com/FrankieFms/homebrew-t3code/stargazers)
 
-An animated T3 Code theme inspired by the channel menu of The Homebrew Channel on the Nintendo Wii.
+An animated OpenCode Desktop and T3 Code theme inspired by the channel menu of The Homebrew Channel on the Nintendo Wii.
 Bubbles rise behind the chat, the sidebar and chat box sit on dark HBC-style bars, and the
 selected thread uses the steel-blue focus bar from the original menu.
 
@@ -18,7 +18,36 @@ selected thread uses the steel-blue focus bar from the original menu.
 
 
 
-## Install
+## Install in OpenCode Desktop
+
+In OpenCode, the themes come as one plugin that adds all 13 colors to
+**Settings** > **Appearance** > **Theme**. It needs an OpenCode Desktop version
+with GUI plugin support, which is experimental in OpenCode.
+
+1. Add the plugin to your global OpenCode config, `~/.config/opencode/opencode.jsonc`.
+   OpenCode Desktop only reads plugins from that file.
+
+   ```sh
+   opencode plugin add github:m5rcel-vibecodes/homebrew-opencode
+   ```
+
+   Or, from a clone of this repository, add its folder to `plugins`:
+
+   ```jsonc
+   {
+     "plugins": ["/path/to/homebrew-opencode"]
+   }
+   ```
+
+2. Restart OpenCode Desktop, open **Settings** > **Appearance**, set the color
+   scheme to **Dark** and pick a **Homebrew Channel** theme.
+
+The water, bubbles and HBC styling load only while a Homebrew Channel theme is
+picked. With any other theme, the plugin adds no CSS. To turn it off, use the
+switch in **Settings** > **Extensions** > **Plugins**, or run
+`opencode plugin remove`.
+
+## Install in T3 Code
 
 1. Download a theme from the list below.
 2. In T3 Code, open **Settings** and go to **Appearance**.
@@ -29,6 +58,7 @@ All themes are dark only, so set T3 Code to dark mode.
 ## Themes
 
 Each color has its own recolored water, tinted bubbles and matching accent.
+The OpenCode plugin includes all of them. The download links are the T3 Code theme files.
 
 | | | |
 |:-:|:-:|:-:|
@@ -85,7 +115,7 @@ Bug reports, fixes and color ideas are welcome. See [CONTRIBUTING.md](CONTRIBUTI
 ## Credits and license
 
 The Homebrew Channel is by Team Twiizers, now [fail0verflow](https://github.com/fail0verflow).
-This theme is a fan tribute and is not affiliated with fail0verflow, Nintendo or T3 Code.
+This theme is a fan tribute and is not affiliated with fail0verflow, Nintendo, OpenCode or T3 Code.
 
 The bubble animation is a CSS translation of `bubbles.c`, and the background and bubble
 images come from The Homebrew Channel's source code at

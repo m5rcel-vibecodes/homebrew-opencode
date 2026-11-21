@@ -1,0 +1,36 @@
+{
+  "name": "opencode-homebrew-channel",
+  "version": "0.1.0",
+  "description": "An animated OpenCode Desktop theme inspired by The Homebrew Channel on the Wii.",
+  "license": "GPL-2.0-or-later",
+  "type": "module",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "theme",
+    "homebrew-channel",
+    "wii"
+  ],
+  "exports": {
+    "./gui-experimental": "./dist/gui-experimental.cjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "python3 scripts/build-theme.py && vite build",
+    "dev": "vite build --watch",
+    "check": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.3.2",
+    "solid-js": "^1.9.20",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.8",
+    "vite-plugin-solid": "^2.11.17"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m5rcel-vibecodes/homebrew-opencode.git"
+  }
+}

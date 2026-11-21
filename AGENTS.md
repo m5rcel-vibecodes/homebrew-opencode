@@ -1,7 +1,8 @@
 # Notes for maintainers and AI agents
 
-This repository is a T3 Code theme that recreates the look of The Homebrew
-Channel (HBC) on the Wii. Read this before changing anything.
+This repository is a T3 Code theme and an OpenCode Desktop plugin that
+recreate the look of The Homebrew Channel (HBC) on the Wii. Read this before
+changing anything.
 
 ## How it fits together
 
@@ -9,11 +10,20 @@ Channel (HBC) on the Wii. Read this before changing anything.
 src/*.css  +  themes/homebrew-channel-colors.json  +  assets/generated/*.webp
                               |
                   scripts/build-theme.py
-                              |
-                   themes/<theme-id>.json   (13 themes, committed)
-                              |
-     git tag vX.Y.Z  ->  .github/workflows/release.yml  ->  GitHub release
+                 /                        \
+  themes/<theme-id>.json          src/opencode/generated/themes.json
+  (13 T3 Code themes, committed)  (13 OpenCode themes + CSS, committed)
+                 |                              |
+  git tag vX.Y.Z -> release.yml       vite build (src/opencode/gui.ts)
+  -> GitHub release                             |
+                                    dist/gui-experimental.cjs (committed)
 ```
+
+- `src/opencode/hbc-opencode.css`: the HBC styling for OpenCode's layout.
+- `src/opencode/gui.ts`: the OpenCode plugin. Registers every theme and
+  injects the active one's CSS.
+- `scripts/check-selectors-opencode.js`: the OpenCode counterpart of
+  `check-selectors.js`.
 
 - `src/hbc-theme.css`: the HBC styling for T3 Code's layout. Shared by every theme.
 - `src/hbc-bubbles-fast.css`: the rising bubbles. This is what the build uses.
@@ -32,6 +42,13 @@ src/*.css  +  themes/homebrew-channel-colors.json  +  assets/generated/*.webp
 - **Never edit `themes/*.json` by hand**, except `homebrew-channel-colors.json`,
   the base palette. Edit `src/` or `scripts/`, run
   `python scripts/build-theme.py`, and commit the rebuilt files with the change.
+  The same goes for `src/opencode/generated/` and `dist/`: run `npm run build`
+  and commit them.
+- **OpenCode: prefer theme tokens over selectors.** OpenCode paints its
+  surfaces from tokens, so `hbc-opencode.css` changes tokens where it can. A
+  rule that needs an element uses a `data-component` or `data-slot` hook and
+  is listed in `scripts/check-selectors-opencode.js`. OpenCode's GUI plugin
+  API is experimental, so check the docs after an OpenCode update.
 - **Stay close to the original HBC look.** Colors and gradients in the
   "Homebrew Channel art" section of `src/hbc-theme.css` were measured from the
   HBC image files. Do not restyle them to taste.
@@ -84,6 +101,10 @@ You cannot see T3 Code from a script. After building:
 2. Check a normal window and a narrow one, with the sidebar open and closed.
 3. Use the keyboard to tab through the sidebar and buttons, to check focus rings.
 4. If colors changed, check a few color variations.
+
+For OpenCode, run `npm run build` and `npm run check`, load this folder as a
+plugin (see docs/DEVELOPMENT.md), and check the same things there, plus a menu
+and the settings dialog.
 
 If you are an AI agent, ask the maintainer to check the result and send
 screenshots.

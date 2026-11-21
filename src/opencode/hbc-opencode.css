@@ -1,0 +1,160 @@
+/* ==========================================================
+   Homebrew Channel look for OpenCode Desktop.
+   The OpenCode counterpart of src/hbc-theme.css. build-theme.py joins it
+   with the background, hbc-bubbles-fast.css and each variation's colors,
+   and the plugin (src/opencode/gui.ts) injects the result only while one
+   of the Homebrew Channel themes is the active theme, so no rule here
+   needs a theme selector and `:root` is always dark.
+
+   OpenCode paints its surfaces from theme tokens (--background-base,
+   --v2-background-bg-*, --surface-*). This file changes a few of those
+   tokens to see-through glass instead of chasing class names, so the
+   water shows through wherever the app uses them. Rules that do need an
+   element use OpenCode's data-component and data-slot hooks; each one is
+   listed in scripts/check-selectors-opencode.js.
+   ========================================================== */
+
+:root {
+  /* Color variations override this in build-theme.py, which also swaps in
+     pre-tinted bubble images (no CSS filter on the bubble layers). */
+  --hbc-accent: #34beed;
+  --hbc-radius: 14px;
+
+  /* The Homebrew Channel underwater background. The image is fitted to the
+     window width; its black foot blends into #000 below.
+     --hbc-background-image is added by build-theme.py. The top of the water
+     is darkened behind the title bar, fading out below it. */
+  --hbc-backdrop:
+    linear-gradient(rgb(5 20 35 / 0.62) 40px, rgb(5 20 35 / 0) 160px),
+    var(--hbc-background-image) center top / 100% auto no-repeat, #000;
+  --hbc-glass: rgba(13, 24, 36, 0.6);
+  --hbc-glass-strong: rgba(19, 34, 53, 0.88);
+  --hbc-tile-border: #24405a;
+  --hbc-tile-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Tokens: clear canvases, glass panels ----------
+   html:root outranks the `:root` block OpenCode writes the theme into, in
+   whichever order the two style elements land. Menus, dialogs and tooltips
+   use the opaque surface and layer tokens, which stay as the theme set
+   them, so popups stay readable over the moving bubbles. */
+
+html:root {
+  /* The app shell and sidebar rail: fully clear, like the chat in HBC. */
+  --background-base: transparent;
+  /* The main column, the chat box and the session list. */
+  --v2-background-bg-base: var(--hbc-glass);
+  --v2-background-bg-deep: var(--hbc-glass);
+  --background-stronger: var(--hbc-glass);
+}
+
+/* ---------- Backdrop: the image sits on the root, bubbles above it ---------- */
+
+/* OpenCode sets the root's background color inline on every theme change;
+   !important beats it. */
+html {
+  background: var(--hbc-backdrop) fixed !important;
+  min-height: 100%;
+}
+
+body,
+#root {
+  background: transparent !important;
+}
+
+/* The settings dialog fills its frame with --v2-background-bg-base, which is
+   glass now. Over the dimmed window that read as a smudge, so it gets the
+   glass on a solid black backing. */
+[data-component="dialog-v2"][data-variant="settings"] [data-slot="dialog-container"] {
+  background: linear-gradient(var(--hbc-glass-strong), var(--hbc-glass-strong)), #000 !important;
+}
+
+/* ---------- Channel tiles: your messages ---------- */
+
+[data-component="user-message"] [data-slot="user-message-text"] {
+  background: var(--hbc-glass-strong) !important;
+  border: 2px solid var(--hbc-tile-border) !important;
+  border-radius: var(--hbc-radius) !important;
+  box-shadow: var(--hbc-tile-shadow) !important;
+  /* No backdrop blur: the bubbles move behind, so a blur would be
+     recalculated every frame. */
+}
+
+/* ---------- Homebrew Channel art ----------
+   Rebuilt from the HBC image files: glossy black bars with a white shine
+   and a thin black outline; a steel-blue bar for the focused item; a
+   teal-to-black panel with a thick black border for dialogs. The steel-blue
+   and teal stops are --hbc-f* and --hbc-p*, which color variations tint.
+   Same values as src/hbc-theme.css: do not restyle them to taste. */
+
+:root {
+  --hbc-f1: #fbfcfd;
+  --hbc-f2: #c2d7e1;
+  --hbc-f3: #82aec4;
+  --hbc-f4: #57879f;
+  --hbc-f5: #184860;
+  --hbc-f6: #416e85;
+  --hbc-f7: #698ea1;
+  --hbc-p1: #173645;
+  --hbc-p2: #0a181e;
+  --hbc-p3: #10252f;
+
+  --hbc-bar-focus: linear-gradient(180deg,
+    var(--hbc-f1) 0 1px, var(--hbc-f2) 1px 2px, var(--hbc-f3) 2px,
+    var(--hbc-f4) 30%, var(--hbc-f5) 70%, var(--hbc-f6) 90%, var(--hbc-f7));
+  --hbc-bar-outline: rgb(0 0 0 / 0.72);
+  --hbc-bar-radius: 6px;
+  --hbc-panel-radius: 10px;
+  --hbc-panel: linear-gradient(180deg,
+    var(--hbc-p1), var(--hbc-p2) 35%, #000 60%, var(--hbc-p2) 85%, var(--hbc-p3));
+}
+
+/* Buttons: HBC's rounded rectangles, turning steel-blue on hover or focus.
+   OpenCode may draw keyboard focus as a box-shadow, so these rules never
+   set box-shadow: the app's own focus ring stays. The outline is drawn
+   with the border instead. border-box stops the gradient tiling into the
+   border, which drew a second shine line along the bottom. */
+[data-component="button"],
+[data-component="button-v2"] {
+  border-radius: var(--hbc-bar-radius) !important;
+}
+
+[data-component="button"]:not(:disabled):hover,
+[data-component="button"]:focus-visible,
+[data-component="button-v2"]:not(:disabled):hover,
+[data-component="button-v2"]:focus-visible {
+  background: var(--hbc-bar-focus) border-box !important;
+  border-color: var(--hbc-bar-outline) !important;
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+}
+
+/* Menus, popovers and dropdowns are HBC dialogs. */
+[data-component="menu-v2-content"],
+[data-component="dropdown-menu-content"],
+[data-component="dropdown-menu-sub-content"],
+[data-component="context-menu-content"],
+[data-component="context-menu-sub-content"],
+[data-component="popover-content"],
+[data-component="select-content"] {
+  background: var(--hbc-panel) !important;
+  border: 3px solid #000 !important;
+  border-radius: var(--hbc-panel-radius) !important;
+}
+
+/* ---------- Caret and text selection ---------- */
+
+[data-component="prompt-input"] {
+  caret-color: var(--hbc-accent);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--hbc-accent) 40%, transparent);
+}
+
+/* ---------- Scrollbars ---------- */
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--hbc-accent) !important;
+  border-radius: 999px;
+}
