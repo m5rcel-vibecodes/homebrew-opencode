@@ -5,7 +5,7 @@
 // while one of them is the active theme. With any other theme picked, the
 // plugin adds no CSS at all, so the bubbles cost nothing.
 //
-// themes.json is written by scripts/build-theme.py. Build with `npm run build`.
+// themes.json is written by scripts/build-theme.py. Build with `npm run bundle`.
 
 import { Plugin, Style, Theme } from "@opencode/plugin/gui"
 import { createSignal, onCleanup } from "solid-js"

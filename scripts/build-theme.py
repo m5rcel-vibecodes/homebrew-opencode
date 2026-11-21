@@ -45,7 +45,7 @@ OpenCode
         and the theme's own "css", minified. The plugin injects it only
         while that theme is active.
     OpenCode themes must have a light variant. These themes are dark only,
-    so "light" is a copy of "dark". Then run `vite build` (or `npm run build`,
+    so "light" is a copy of "dark". Then run `vite build` (or `npm run bundle`,
     which runs this script first) to write dist/gui-experimental.cjs.
 
 To add a color variation, see docs/DEVELOPMENT.md.

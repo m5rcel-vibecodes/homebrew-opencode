@@ -56,7 +56,7 @@ It needs Node.js and Python 3.9 or newer:
 
 ```sh
 npm install
-npm run build   # build-theme.py, then vite build
+npm run bundle   # build-theme.py, then vite build
 npm run check   # type-check src/opencode against the plugin SDK
 ```
 

@@ -42,7 +42,7 @@ src/*.css  +  themes/homebrew-channel-colors.json  +  assets/generated/*.webp
 - **Never edit `themes/*.json` by hand**, except `homebrew-channel-colors.json`,
   the base palette. Edit `src/` or `scripts/`, run
   `python scripts/build-theme.py`, and commit the rebuilt files with the change.
-  The same goes for `src/opencode/generated/` and `dist/`: run `npm run build`
+  The same goes for `src/opencode/generated/` and `dist/`: run `npm run bundle`
   and commit them.
 - **OpenCode: prefer theme tokens over selectors.** OpenCode paints its
   surfaces from tokens, so `hbc-opencode.css` changes tokens where it can. A
@@ -74,6 +74,13 @@ src/*.css  +  themes/homebrew-channel-colors.json  +  assets/generated/*.webp
 
 ## Things that are easy to get wrong
 
+- **No `build`, `prepare` or install scripts in `package.json`.** `opencode plugin
+  add github:…` fetches the repo with npm's Git fetcher, which runs a full
+  `npm install` in the clone when the package has a `build`, `prepare`,
+  `prepack`, `preinstall`, `install` or `postinstall` script. Inside OpenCode
+  that step fails ("git dep preparation failed"). That is why the script is
+  called `bundle` and `dist/` is committed.
+
 - **Focus rings.** T3 Code draws keyboard focus as a Tailwind ring, which is a
   `box-shadow`. Any rule here that sets `box-shadow` on a focusable element must
   start with
@@ -102,7 +109,7 @@ You cannot see T3 Code from a script. After building:
 3. Use the keyboard to tab through the sidebar and buttons, to check focus rings.
 4. If colors changed, check a few color variations.
 
-For OpenCode, run `npm run build` and `npm run check`, load this folder as a
+For OpenCode, run `npm run bundle` and `npm run check`, load this folder as a
 plugin (see docs/DEVELOPMENT.md), and check the same things there, plus a menu
 and the settings dialog.
 

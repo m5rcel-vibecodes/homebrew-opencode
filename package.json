@@ -18,7 +18,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "python3 scripts/build-theme.py && vite build",
+    "bundle": "python3 scripts/build-theme.py && vite build",
     "dev": "vite build --watch",
     "check": "tsc -p tsconfig.json"
   },
